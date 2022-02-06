@@ -20,122 +20,8 @@ if (document.URL.match('embed')) {
   return;
 }
 
-fetch(`https://www.youtube.com/iframe_api`)
-  .then(res => res.text())
-  .then(apiCode => {
-    const onYTIAPIReadyFunc = `function onYouTubeIframeAPIReady() {};`;
-    const exec = `
-      try{
-        playAllUploadedVideos_app();
-        console.log('script \"play all uploaded videos\" is ready');
-      } catch (e) {
-        console.error(e)
-        alert('ERROR: script \"play all uploaded videos\"')
-      }
-    `;
-    eval(onYTIAPIReadyFunc + apiCode + exec);
-  });
-
 const playAllUploadedVideos_app = async function () {
   const appState = {};
-
-  const initialInterfaceElement = document.createElement('div');
-  initialInterfaceElement.setAttribute('style', 'z-index: 2100; display: flex; position: fixed; width: 100%; font-size: 30px; cursor: pointer; justify-content: right;');
-  const initialInterfaceElement_shadow = initialInterfaceElement.attachShadow({mode: 'open'});
-  initialInterfaceElement_shadow.innerHTML = `
-    <style>
-    .butt {
-      position: absolute;
-      -webkit-user-select: none;         
-      -moz-user-select: none; 
-      -ms-user-select: none;
-      user-select: none; 
-    }
-    .butt:active {
-      opacity: .5
-    }
-    </style>
-    <div class="butt" style="width: 113px; right: 277px;">
-      <div style="width: 113px; height: 55px; background-color: red; opacity:0.6;position: absolute;"></div>
-      <div style="position: absolute;margin: 9px;width: 95px;text-align: center; height: 55px;">Play all</div>
-    </div>
-    <div class="butt" style="width: 50px; right: 390px; display: none">
-      <div style="width: 50px; height: 55px; background-color: green; opacity:0.6;position: absolute;"></div>
-      <div style="position: absolute;margin: 9px;text-align: center;">📺</div>
-    </div>`;
-  const playAllButton = initialInterfaceElement_shadow.children[1];
-  playAllButton.addEventListener('click', playAllVideos);
-  const showPlayerButton = initialInterfaceElement_shadow.children[2];
-  showPlayerButton.addEventListener('click', showPlayer);
-  document.body.appendChild(initialInterfaceElement);
-  
-  const playerElementId = `DGhdrthdfgberTNdfBBryhdfjkdtYgHDrt6h4e5tE56ue5srhue5YTDHRthtydj43t325yerhJfGUYkYU7hgdYhtyTK66Dyjn`;
-  const playerElement = document.createElement('div');
-  playerElement.setAttribute('style', 'z-index: 2200;display: none; position: fixed; flex-direction: column; background-color: black;');
-  playerElement.innerHTML = `
-    <div></div>
-    <div id="${playerElementId}"></div>
-  `;
-  const playerElementChild0_shadow = playerElement.children[0].attachShadow({mode: 'open'});
-  playerElementChild0_shadow.innerHTML = `
-    <style>
-    :host{
-      display:flex;
-      flex-direction: row;
-      font-size: 30px;
-      width: 100%;
-      justify-content: space-between;
-    }
-    .butt {
-      padding:9px;
-      cursor: pointer;
-      -webkit-user-select: none;         
-      -moz-user-select: none; 
-      -ms-user-select: none;
-      user-select: none; 
-    }
-    .butt:active {
-      opacity: .5
-    }
-    </style>
-    <div style="" class="butt">
-      ⏮️
-    </div>
-    <div style="" class="butt">
-      ⏯️
-    </div>
-    <div style="" class="butt">
-      ⏭️
-    </div>
-    <div style="display: flex;flex-direction: row;">
-      <div style="user-select: none;padding:9px;">
-        0
-      </div>
-      <div style="user-select: none;padding:9px 0px 9px 0px;">
-        /
-      </div>
-      <div style="user-select: none;padding:9px;">
-        0
-      </div>
-    </div>
-    <div style="" class="butt">
-      add
-    </div>
-    <div style="" class="butt">
-      🔄
-    </div>
-    <div style="" class="butt">
-      ❌
-    </div>
-  `;
-  playerElementChild0_shadow.children[1].addEventListener('click', selectPreviousVideo);
-  playerElementChild0_shadow.children[2].addEventListener('click', pauseOrPlayVideo);
-  playerElementChild0_shadow.children[3].addEventListener('click', selectNextVideo);
-  const paginationCounter = playerElementChild0_shadow.children[4];
-  playerElementChild0_shadow.children[5].addEventListener('click', addVideosToQueue);
-  playerElementChild0_shadow.children[6].addEventListener('click', reverseQueue);
-  playerElementChild0_shadow.children[7].addEventListener('click', hidePlayer);
-  document.body.appendChild(playerElement);
   
   const playAllVideos = async function (e) {
     if (e) {
@@ -457,6 +343,104 @@ const playAllUploadedVideos_app = async function () {
     }
     playerElement.style.display = 'none';
   }
+  
+  const initialInterfaceElement = document.createElement('div');
+  initialInterfaceElement.setAttribute('style', 'z-index: 2100; display: flex; position: fixed; width: 100%; font-size: 30px; cursor: pointer; justify-content: right;');
+  const initialInterfaceElement_shadow = initialInterfaceElement.attachShadow({mode: 'open'});
+  initialInterfaceElement_shadow.innerHTML = `
+    <style>
+    .butt {
+      position: absolute;
+      -webkit-user-select: none;         
+      -moz-user-select: none; 
+      -ms-user-select: none;
+      user-select: none; 
+    }
+    .butt:active {
+      opacity: .5
+    }
+    </style>
+    <div class="butt" style="width: 113px; right: 277px;">
+      <div style="width: 113px; height: 55px; background-color: red; opacity:0.6;position: absolute;"></div>
+      <div style="position: absolute;margin: 9px;width: 95px;text-align: center; height: 55px;">Play all</div>
+    </div>
+    <div class="butt" style="width: 50px; right: 390px; display: none">
+      <div style="width: 50px; height: 55px; background-color: green; opacity:0.6;position: absolute;"></div>
+      <div style="position: absolute;margin: 9px;text-align: center;">📺</div>
+    </div>`;
+  const playAllButton = initialInterfaceElement_shadow.children[1];
+  playAllButton.addEventListener('click', playAllVideos);
+  const showPlayerButton = initialInterfaceElement_shadow.children[2];
+  showPlayerButton.addEventListener('click', showPlayer);
+  document.body.appendChild(initialInterfaceElement);
+  
+  const playerElementId = `DGhdrthdfgberTNdfBBryhdfjkdtYgHDrt6h4e5tE56ue5srhue5YTDHRthtydj43t325yerhJfGUYkYU7hgdYhtyTK66Dyjn`;
+  const playerElement = document.createElement('div');
+  playerElement.setAttribute('style', 'z-index: 2200;display: none; position: fixed; flex-direction: column; background-color: black;');
+  playerElement.innerHTML = `
+    <div></div>
+    <div id="${playerElementId}"></div>
+  `;
+  const playerElementChild0_shadow = playerElement.children[0].attachShadow({mode: 'open'});
+  playerElementChild0_shadow.innerHTML = `
+    <style>
+    :host{
+      display:flex;
+      flex-direction: row;
+      font-size: 30px;
+      width: 100%;
+      justify-content: space-between;
+    }
+    .butt {
+      padding:9px;
+      cursor: pointer;
+      -webkit-user-select: none;         
+      -moz-user-select: none; 
+      -ms-user-select: none;
+      user-select: none; 
+    }
+    .butt:active {
+      opacity: .5
+    }
+    </style>
+    <div style="" class="butt">
+      ⏮️
+    </div>
+    <div style="" class="butt">
+      ⏯️
+    </div>
+    <div style="" class="butt">
+      ⏭️
+    </div>
+    <div style="display: flex;flex-direction: row;">
+      <div style="user-select: none;padding:9px;">
+        0
+      </div>
+      <div style="user-select: none;padding:9px 0px 9px 0px;">
+        /
+      </div>
+      <div style="user-select: none;padding:9px;">
+        0
+      </div>
+    </div>
+    <div style="" class="butt">
+      add
+    </div>
+    <div style="" class="butt">
+      🔄
+    </div>
+    <div style="" class="butt">
+      ❌
+    </div>
+  `;
+  playerElementChild0_shadow.children[1].addEventListener('click', selectPreviousVideo);
+  playerElementChild0_shadow.children[2].addEventListener('click', pauseOrPlayVideo);
+  playerElementChild0_shadow.children[3].addEventListener('click', selectNextVideo);
+  const paginationCounter = playerElementChild0_shadow.children[4];
+  playerElementChild0_shadow.children[5].addEventListener('click', addVideosToQueue);
+  playerElementChild0_shadow.children[6].addEventListener('click', reverseQueue);
+  playerElementChild0_shadow.children[7].addEventListener('click', hidePlayer);
+  document.body.appendChild(playerElement);
 
   while (true) {
     let match;
@@ -482,3 +466,19 @@ const playAllUploadedVideos_app = async function () {
   }
 
 }
+
+fetch(`https://www.youtube.com/iframe_api`)
+  .then(res => res.text())
+  .then(apiCode => {
+    const onYTIAPIReadyFunc = `function onYouTubeIframeAPIReady() {};`;
+    const exec = `
+      try{
+        playAllUploadedVideos_app();
+        console.log('script \"play all uploaded videos\" is ready');
+      } catch (e) {
+        console.error(e)
+        alert('ERROR: script \"play all uploaded videos\"')
+      }
+    `;
+    eval(onYTIAPIReadyFunc + apiCode + exec);
+  });
