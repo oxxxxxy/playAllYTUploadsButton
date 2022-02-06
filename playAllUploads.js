@@ -142,27 +142,27 @@ const playAllUploadedVideos_app = async function () {
   async function playAllVideos (e) {
     e.preventDefault();
 
-    if ((appState.currentURL ? appState.currentURL : 0) === document.URL) {
+    if (appState.currentURL === document.URL) {
       showPlayer();
       return;
-    } else {
-      appState.currentURL = document.URL;
-      appState.playingVideoIndex = 0;
-      delete appState.linkQueue;
-      delete appState.isQueueReversed;
     }
+    
+    appState.currentURL = document.URL;
+    appState.playingVideoIndex = 0;
+    delete appState.linkQueue;
+    delete appState.isQueueReversed;
 
     appState.linkQueue = await loadVideoURLQueue();
     if(!appState.linkQueue.length) {
       alert(`
-        WARNING: appState.linkQueue = loadVideoURLQueue(); !appState.linkQueue === true;
+        ERROR: appState.linkQueue = loadVideoURLQueue(); !appState.linkQueue === true;
         There are some problems :3
       `)
       return;
     }
     paginationCounter.children[2].innerHTML = appState.linkQueue.length;
     paginationCounter.children[0].innerHTML = appState.playingVideoIndex + 1;
-    console.log(appState)
+
     showPlayer();
     if(!!appState.YTPlayer){
       appState.YTPlayer.loadVideoById(appState.linkQueue[appState.playingVideoIndex]);
@@ -174,39 +174,92 @@ const playAllUploadedVideos_app = async function () {
   }
   
   async function loadVideoURLQueue() {
-    const videoParentNode = await new Promise ((resolve, reject) => {
-      document.querySelectorAll('ytd-browse').forEach(i => {
-        if(i.innerHTML.match(/page-subtype="channels"/)){
-          const element = i.querySelector('ytd-two-column-browse-results-renderer')
-            .querySelector('#primary.style-scope.ytd-two-column-browse-results-renderer')
-            .querySelector('#contents.style-scope.ytd-section-list-renderer')
-            .querySelector('#items.style-scope.ytd-grid-renderer');
-          if(!element){
-            console.error('FUCKING YOUTUBE FAGGOTS CHANGED SOMETHING');
-            reject();
-          }
-          resolve(element);
-        }
-      });
-    });
     const links = [];
     let initialIndex = !!appState.linkQueue ? appState.linkQueue.length - 1 : 0;
-    
     const maximum = initialIndex ? initialIndex + 100 : 100;
 
+    function getVideoNodeList () {
+      let nodeList;
+      switch (appState.pageSubtype) {
+        case '.com/':
+          document.querySelectorAll('ytd-browse').forEach(i => {
+            if(i.innerHTML.match(/page-subtype="home"/)){
+              nodeList = i.querySelector('ytd-two-column-browse-results-renderer')
+                .querySelectorAll('ytd-rich-item-renderer.style-scope.ytd-rich-grid-row')
+              if(!nodeList){
+                // throw console.error('FUCKING YOUTUBE FAGGOTS CHANGED SOMETHING');
+              }
+            }
+          });
+          break;
+        case '/videos':
+          document.querySelectorAll('ytd-browse').forEach(i => {
+            if(i.innerHTML.match(/page-subtype="channels"/)){//
+              nodeList = i.querySelector('ytd-two-column-browse-results-renderer')
+                .querySelector('#items.style-scope.ytd-grid-renderer');
+              if(!nodeList){
+                throw console.error('FUCKING YOUTUBE FAGGOTS CHANGED SOMETHING');
+              }
+            }
+          });
+          break;
+        case '/subscriptions':
+          document.querySelectorAll('ytd-browse').forEach(i => {
+            if(i.innerHTML.match(/page-subtype="subscriptions"/)){
+              nodeList = i.querySelector('ytd-two-column-browse-results-renderer')
+                .querySelectorAll('ytd-grid-video-renderer.style-scope.ytd-grid-renderer');
+              if(!nodeList){
+                throw console.error('FUCKING YOUTUBE FAGGOTS CHANGED SOMETHING');
+              }
+            }
+          });
+          break;
+        case '/playlist':
+          document.querySelectorAll('ytd-browse').forEach(i => {
+            if(i.innerHTML.match(/page-subtype="playlist"/)){
+              nodeList = i.querySelector('ytd-two-column-browse-results-renderer')
+                .querySelectorAll('ytd-playlist-video-renderer.style-scope.ytd-playlist-video-list-renderer');
+              if(!nodeList){
+                throw console.error('FUCKING YOUTUBE FAGGOTS CHANGED SOMETHING');
+              }
+            }
+          });
+          break;
+        case '/history':
+          document.querySelectorAll('ytd-browse').forEach(i => {
+            if(i.innerHTML.match(/page-subtype="history"/)){
+              nodeList = i.querySelector('ytd-two-column-browse-results-renderer')
+                .querySelectorAll('ytd-video-renderer.style-scope.ytd-item-section-renderer');
+              if(!nodeList){
+                throw console.error('FUCKING YOUTUBE FAGGOTS CHANGED SOMETHING');
+              }
+            }
+          });
+          break;
+        default:
+
+          break;
+      }
+
+      return nodeList;
+    };
+    
+    let videoNodeList = getVideoNodeList();
+
     async function loadParentNodeChildren() {
-      let previousLength = videoParentNode.children.length;
+      let previousLength = videoNodeList.length;
       let sequenceOfTheSameLength = 0;
       let yValue = window.scrollY;
       while(true){
-        if(maximum <= videoParentNode.children.length - 1){
+        if(maximum <= videoNodeList.length - 1){
           return;
         }
         window.scroll(0, yValue);
         await new Promise(resolve => setTimeout(resolve, 1000));
-        if (previousLength < videoParentNode.children.length){
+        videoNodeList = getVideoNodeList();
+        if (previousLength < videoNodeList.length){
             sequenceOfTheSameLength = 0;
-            previousLength = videoParentNode.children.length;
+            previousLength = videoNodeList.length;
         }else{
           sequenceOfTheSameLength++;
           if(sequenceOfTheSameLength > 4){
@@ -219,13 +272,13 @@ const playAllUploadedVideos_app = async function () {
     }
         
     await loadParentNodeChildren();
-    if (!(initialIndex < videoParentNode.children.length - 1)){
+    if (!(initialIndex < videoNodeList.length - 1)){
       return [];
     }
-    
+
     while(initialIndex < maximum){
       try{
-        links.push(videoParentNode.children[initialIndex].innerHTML.match(/\?v=(.*?)(&|\s|"|$)/)[1]);
+        links.push(videoNodeList[initialIndex].innerHTML.match(/\?v=(.*?)(&|\s|"|$)/)[1]);
       } catch (e){
         initialIndex = maximum;
       }
@@ -248,7 +301,6 @@ const playAllUploadedVideos_app = async function () {
   }
   
   function onPlayerStateChange (e) {
-    console.log(e.data)
     switch (e.data) {
       case -1: // unstarted
         
@@ -281,7 +333,7 @@ const playAllUploadedVideos_app = async function () {
   }
 
   function selectPreviousVideo (e) {
-    if(!!e) {
+    if(e) {
       e.preventDefault();
     }
     
@@ -300,7 +352,7 @@ const playAllUploadedVideos_app = async function () {
   }
   
   function pauseOrPlayVideo (e) {
-    if(!!e){
+    if(e){
       e.preventDefault();
     }
     if(!!appState.isPlaying){
@@ -314,7 +366,7 @@ const playAllUploadedVideos_app = async function () {
   }
   
   function selectNextVideo (e) {
-    if(!!e) {
+    if(e) {
       e.preventDefault();
     }
     
@@ -378,7 +430,7 @@ const playAllUploadedVideos_app = async function () {
   }
   
   function reverseQueue (e) {
-    if (!!e) {
+    if (e) {
       e.preventDefault();
     }
     
@@ -391,21 +443,35 @@ const playAllUploadedVideos_app = async function () {
   }
   
   function showPlayer (e) {
-    if (!!e) {
+    if (e) {
       e.preventDefault();
     }
     playerElement.style.display = 'flex';
   }
   
   function hidePlayer (e) {
-    if (!!e) {
+    if (e) {
       e.preventDefault();
     }
     playerElement.style.display = 'none';
   }
 
   while (true) {
-    if(!!document.URL.match('\/videos')) {
+    let match;
+    if(!!(match = document.URL.match(/https:\/\/www\.youtube.*(\/videos$)/))) {
+      appState.pageSubtype = match[1];
+      playAllButton.style.display = 'block';
+    }else if(!!(match = document.URL.match(/https:\/\/www\.youtube(\.com\/$)/))) {
+      appState.pageSubtype = match[1];
+      playAllButton.style.display = 'block';
+    }else if(!!(match = document.URL.match(/https:\/\/www\.youtube.*(\/subscriptions$)/))) {
+      appState.pageSubtype = match[1];
+      playAllButton.style.display = 'block';
+    }else if(!!(match = document.URL.match(/https:\/\/www\.youtube.*(\/playlist)\?/))) {
+      appState.pageSubtype = match[1];
+      playAllButton.style.display = 'block';
+    }else if(!!(match = document.URL.match(/https:\/\/www\.youtube.*(\/history$)/))) {
+      appState.pageSubtype = match[1];
       playAllButton.style.display = 'block';
     }else{
       playAllButton.style.display = 'none';
