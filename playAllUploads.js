@@ -16,11 +16,9 @@
 
 'use strict';
 
-try{
-  if (document.URL.match('embed')) {
-    return;
-  }
-} catch (e) {}
+if (document.URL.match('embed')) {
+  return;
+}
 
 fetch(`https://www.youtube.com/iframe_api`)
   .then(res => res.text())
