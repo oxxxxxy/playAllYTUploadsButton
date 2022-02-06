@@ -82,7 +82,7 @@ const playAllUploadedVideos_app = async function () {
           document.querySelectorAll('ytd-browse').forEach(i => {
             if(i.innerHTML.match(/page-subtype="channels"/)){//
               nodeList = i.querySelector('ytd-two-column-browse-results-renderer')
-                .querySelector('#items.style-scope.ytd-grid-renderer');
+                .querySelectorAll('ytd-grid-video-renderer.style-scope.ytd-grid-renderer');
               if(!nodeList){
                 throw console.error('FUCKING YOUTUBE FAGGOTS CHANGED SOMETHING');
               }
@@ -143,6 +143,7 @@ const playAllUploadedVideos_app = async function () {
         window.scroll(0, yValue);
         await new Promise(resolve => setTimeout(resolve, 1000));
         videoNodeList = getVideoNodeList();
+        console.log(videoNodeList)
         if (previousLength < videoNodeList.length){
             sequenceOfTheSameLength = 0;
             previousLength = videoNodeList.length;
@@ -186,12 +187,19 @@ const playAllUploadedVideos_app = async function () {
     });
   }
   
-  const onPlayerStateChange = function (e) {
+  const onPlayerStateChange = async function (e) {
     switch (e.data) {
       case -1: // unstarted
         
         break;
       case 0: // ended
+        if(appState.playingVideoIndex + 1 == appState.linkQueue.length){
+          if(!!appState.isQueueReversed) {
+            break;
+          }else{
+            await addVideosToQueue();
+          }
+        }
         selectNextVideo();
         break;
       case 1: // playing
@@ -223,14 +231,10 @@ const playAllUploadedVideos_app = async function () {
       e.preventDefault();
     }
     
-    if(!!appState.isQueueReversed) {
-      if(!increasePlayingVideoIndex()){
-        return;
-      }
-    }else{
-      if(!decreasePlayingVideoIndex()){
-        return;
-      }
+    appState.playingVideoIndex--;
+    if(appState.playingVideoIndex < 0) {
+      appState.playingVideoIndex++;
+      return;
     }
     
     appState.YTPlayer.loadVideoById(appState.linkQueue[appState.playingVideoIndex]);
@@ -256,36 +260,33 @@ const playAllUploadedVideos_app = async function () {
       e.preventDefault();
     }
     
-    if(!!appState.isQueueReversed) {
-      if(!decreasePlayingVideoIndex()){
-        return;
-      }
-    }else{
-      if(!increasePlayingVideoIndex()){
-        return;
-      }
+    appState.playingVideoIndex++;
+    if(appState.playingVideoIndex >= appState.linkQueue.length) {
+      appState.playingVideoIndex--;
+      return;
     }
     
     appState.YTPlayer.loadVideoById(appState.linkQueue[appState.playingVideoIndex]);
     paginationCounter.children[0].innerHTML = appState.playingVideoIndex + 1;
   }
   
-  const increasePlayingVideoIndex = function () {
-    appState.playingVideoIndex++;
-    if(appState.playingVideoIndex >= appState.linkQueue.length) {
-      appState.playingVideoIndex--;
-      return false;
+  const showQueueIndexInput = function (e){
+    if (e) {
+      e.preventDefault();
     }
-    return true;
+    
   }
   
-  const decreasePlayingVideoIndex = function () {
-    appState.playingVideoIndex--;
-    if(appState.playingVideoIndex < 0) {
-      appState.playingVideoIndex++;
-      return false;
+  const hideQueueIndexInput = function (){
+    // paginationCounter.children[0]
+    // paginationCounter.children[0].children[1].children[0]
+  }
+  
+  const setQueueIndex = function (e){
+    if (e) {
+      e.preventDefault();
     }
-    return true;
+    
   }
   
   const addVideosToQueue = async function (e) {
@@ -413,8 +414,11 @@ const playAllUploadedVideos_app = async function () {
       ⏭️
     </div>
     <div style="display: flex;flex-direction: row;">
-      <div style="user-select: none;padding:9px;">
-        0
+      <div style="user-select: none;padding:9px;display: flex; cursor: pointer;">
+        <div style="display: none;">1</div>
+        <div style="position: absolute;display: flex;justify-content: right;">
+          <input type="number" min="1" max="100" value="30" style="position: absolute;width: 60px;height: 30px;font-size: 30px;">
+        </div>
       </div>
       <div style="user-select: none;padding:9px 0px 9px 0px;">
         /
@@ -437,6 +441,8 @@ const playAllUploadedVideos_app = async function () {
   playerElementChild0_shadow.children[2].addEventListener('click', pauseOrPlayVideo);
   playerElementChild0_shadow.children[3].addEventListener('click', selectNextVideo);
   const paginationCounter = playerElementChild0_shadow.children[4];
+  paginationCounter.children[0].addEventListener('click', showQueueIndexInput);
+  paginationCounter.children[0].children[1].children[0].addEventListener('keydown', setQueueIndex);
   playerElementChild0_shadow.children[5].addEventListener('click', addVideosToQueue);
   playerElementChild0_shadow.children[6].addEventListener('click', reverseQueue);
   playerElementChild0_shadow.children[7].addEventListener('click', hidePlayer);
@@ -482,3 +488,4 @@ fetch(`https://www.youtube.com/iframe_api`)
     `;
     eval(onYTIAPIReadyFunc + apiCode + exec);
   });
+
