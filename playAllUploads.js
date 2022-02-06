@@ -137,8 +137,10 @@ const playAllUploadedVideos_app = async function () {
   playerElementChild0_shadow.children[7].addEventListener('click', hidePlayer);
   document.body.appendChild(playerElement);
   
-  async function playAllVideos (e) {
-    e.preventDefault();
+  const playAllVideos = async function (e) {
+    if (e) {
+      e.preventDefault();
+    }
 
     if (appState.currentURL === document.URL) {
       showPlayer();
@@ -171,12 +173,12 @@ const playAllUploadedVideos_app = async function () {
     
   }
   
-  async function loadVideoURLQueue() {
+  const loadVideoURLQueue = async function () {
     const links = [];
     let initialIndex = !!appState.linkQueue ? appState.linkQueue.length - 1 : 0;
     const maximum = initialIndex ? initialIndex + 100 : 100;
 
-    function getVideoNodeList () {
+    const getVideoNodeList = function  () {
       let nodeList;
       switch (appState.pageSubtype) {
         case '.com/':
@@ -244,7 +246,7 @@ const playAllUploadedVideos_app = async function () {
     
     let videoNodeList = getVideoNodeList();
 
-    async function loadParentNodeChildren() {
+    const loadParentNodeChildren = async function () {
       let previousLength = videoNodeList.length;
       let sequenceOfTheSameLength = 0;
       let yValue = window.scrollY;
@@ -286,7 +288,7 @@ const playAllUploadedVideos_app = async function () {
     return links;
   }
   
-  function spawnYTPlayer () {
+  const spawnYTPlayer = function () {
     appState.YTPlayer = new YT.Player(playerElementId, {
       height: `889`,
       width: `1908`,
@@ -298,7 +300,7 @@ const playAllUploadedVideos_app = async function () {
     });
   }
   
-  function onPlayerStateChange (e) {
+  const onPlayerStateChange = function (e) {
     switch (e.data) {
       case -1: // unstarted
         
@@ -326,11 +328,11 @@ const playAllUploadedVideos_app = async function () {
     }
   }
   
-  function onPlayerReady (e) {
+  const onPlayerReady = function (e) {
     appState.YTPlayer.playVideo();
   }
 
-  function selectPreviousVideo (e) {
+  const selectPreviousVideo = function (e) {
     if(e) {
       e.preventDefault();
     }
@@ -349,7 +351,7 @@ const playAllUploadedVideos_app = async function () {
     paginationCounter.children[0].innerHTML = appState.playingVideoIndex + 1;
   }
   
-  function pauseOrPlayVideo (e) {
+  const pauseOrPlayVideo = function (e) {
     if(e){
       e.preventDefault();
     }
@@ -363,7 +365,7 @@ const playAllUploadedVideos_app = async function () {
     }
   }
   
-  function selectNextVideo (e) {
+  const selectNextVideo = function (e) {
     if(e) {
       e.preventDefault();
     }
@@ -382,7 +384,7 @@ const playAllUploadedVideos_app = async function () {
     paginationCounter.children[0].innerHTML = appState.playingVideoIndex + 1;
   }
   
-  function increasePlayingVideoIndex () {
+  const increasePlayingVideoIndex = function () {
     appState.playingVideoIndex++;
     if(appState.playingVideoIndex >= appState.linkQueue.length) {
       appState.playingVideoIndex--;
@@ -391,7 +393,7 @@ const playAllUploadedVideos_app = async function () {
     return true;
   }
   
-  function decreasePlayingVideoIndex () {
+  const decreasePlayingVideoIndex = function () {
     appState.playingVideoIndex--;
     if(appState.playingVideoIndex < 0) {
       appState.playingVideoIndex++;
@@ -400,8 +402,10 @@ const playAllUploadedVideos_app = async function () {
     return true;
   }
   
-  async function addVideosToQueue (e) {
-    e.preventDefault();
+  const addVideosToQueue = async function (e) {
+    if (e) {
+      e.preventDefault();
+    }
     
     if (appState.currentURL !== document.URL) {
       alert(`
@@ -427,7 +431,7 @@ const playAllUploadedVideos_app = async function () {
     paginationCounter.children[2].innerHTML = appState.linkQueue.length;
   }
   
-  function reverseQueue (e) {
+  const reverseQueue = function (e) {
     if (e) {
       e.preventDefault();
     }
@@ -440,14 +444,14 @@ const playAllUploadedVideos_app = async function () {
     console.log('do nothing')
   }
   
-  function showPlayer (e) {
+  const showPlayer = function (e) {
     if (e) {
       e.preventDefault();
     }
     playerElement.style.display = 'flex';
   }
   
-  function hidePlayer (e) {
+  const hidePlayer = function (e) {
     if (e) {
       e.preventDefault();
     }
