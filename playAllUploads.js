@@ -73,7 +73,7 @@ const playAllUploadedVideos_app = async function () {
               nodeList = i.querySelector('ytd-two-column-browse-results-renderer')
                 .querySelectorAll('ytd-rich-item-renderer.style-scope.ytd-rich-grid-row')
               if(!nodeList){
-                throw `FYT devs changed something inside DOM tree.`;
+                throw `Lovely YT devs changed something inside the DOM tree.`;
               }
             }
           });
@@ -84,7 +84,7 @@ const playAllUploadedVideos_app = async function () {
               nodeList = i.querySelector('ytd-two-column-browse-results-renderer')
                 .querySelectorAll('ytd-grid-video-renderer.style-scope.ytd-grid-renderer');
               if(!nodeList){
-                throw `FYT devs changed something inside DOM tree.`;
+                throw `Lovely YT devs changed something inside the DOM tree.`;
               }
             }
           });
@@ -95,7 +95,7 @@ const playAllUploadedVideos_app = async function () {
               nodeList = i.querySelector('ytd-two-column-browse-results-renderer')
                 .querySelectorAll('ytd-grid-video-renderer.style-scope.ytd-grid-renderer');
               if(!nodeList){
-                throw `FYT devs changed something inside DOM tree.`;
+                throw `Lovely YT devs changed something inside the DOM tree.`;
               }
             }
           });
@@ -106,7 +106,7 @@ const playAllUploadedVideos_app = async function () {
               nodeList = i.querySelector('ytd-two-column-browse-results-renderer')
                 .querySelectorAll('ytd-playlist-video-renderer.style-scope.ytd-playlist-video-list-renderer');
               if(!nodeList){
-                throw `FYT devs changed something inside DOM tree.`;
+                throw `Lovely YT devs changed something inside the DOM tree.`;
               }
             }
           });
@@ -117,7 +117,7 @@ const playAllUploadedVideos_app = async function () {
               nodeList = i.querySelector('ytd-two-column-browse-results-renderer')
                 .querySelectorAll('ytd-video-renderer.style-scope.ytd-item-section-renderer');
               if(!nodeList){
-                throw `FYT devs changed something inside DOM tree.`;
+                throw `Lovely YT devs changed something inside the DOM tree.`;
               }
             }
           });
