@@ -187,7 +187,7 @@ const playAllUploadedVideos_app = async function () {
               nodeList = i.querySelector('ytd-two-column-browse-results-renderer')
                 .querySelectorAll('ytd-rich-item-renderer.style-scope.ytd-rich-grid-row')
               if(!nodeList){
-                // throw console.error('FUCKING YOUTUBE FAGGOTS CHANGED SOMETHING');
+                throw console.error('FUCKING YOUTUBE FAGGOTS CHANGED SOMETHING');
               }
             }
           });
