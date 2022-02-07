@@ -8,12 +8,6 @@
 // @description 12/21/2021, 2:49:53 PM
 // ==/UserScript==
 
-//tasks:
-//make playing of subs videos
-//make playong of selected videos
-//make reversing of queue
-//make refucktoring
-
 'use strict';
 
 if (document.URL.match('embed')) {
