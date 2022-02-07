@@ -22,11 +22,17 @@ if (document.URL.match('embed')) {
 
 const playAllUploadedVideos_app = async function () {
   const appState = {};
+  appState.isReady = true;
   
   const playAllVideos = async function (e) {
     if (e) {
       e.preventDefault();
     }
+    
+    if(!appState.isReady){
+      return;
+    }
+    appState.isReady = false;
 
     if (appState.currentURL === document.URL) {
       showPlayer();
@@ -38,31 +44,31 @@ const playAllUploadedVideos_app = async function () {
     delete appState.linkQueue;
     delete appState.isQueueReversed;
 
-    appState.linkQueue = await loadVideoURLQueue();
+    appState.linkQueue = await loadVideoURLQueue(100);
     if(!appState.linkQueue.length) {
-      alert(`
-        ERROR: appState.linkQueue = loadVideoURLQueue(); !appState.linkQueue === true;
-        There are some problems :3
-      `)
-      return;
+      throw `ERROR: appState.linkQueue = loadVideoURLQueue(); !appState.linkQueue === true; There are some problems :3`
     }
-    paginationCounter.children[2].innerHTML = appState.linkQueue.length;
-    paginationCounter.children[0].innerHTML = appState.playingVideoIndex + 1;
+    drawInterfaceValues();
 
     showPlayer();
     if(!!appState.YTPlayer){
       appState.YTPlayer.loadVideoById(appState.linkQueue[appState.playingVideoIndex]);
+      appState.isReady = true;
       return;
     }
     spawnYTPlayer();
     showPlayerButton.style.display = 'block';
-    
+    appState.isReady = true;
   }
   
-  const loadVideoURLQueue = async function () {
+  const loadVideoURLQueue = async function (num) {
+    if(!num){
+      throw `ERROR:there is undefined argument inside loadVideoURLQueue`;
+    }
+    
     const links = [];
     let initialIndex = !!appState.linkQueue ? appState.linkQueue.length - 1 : 0;
-    const maximum = initialIndex ? initialIndex + 100 : 100;
+    const maximum = initialIndex ? initialIndex + num : num;
 
     const getVideoNodeList = function  () {
       let nodeList;
@@ -72,7 +78,7 @@ const playAllUploadedVideos_app = async function () {
             if(i.innerHTML.match(/page-subtype="home"/)){
               nodeList = i.querySelector('ytd-two-column-browse-results-renderer')
                 .querySelectorAll('ytd-rich-item-renderer.style-scope.ytd-rich-grid-row')
-              if(!nodeList){
+              if(!nodeList.length){
                 throw `Lovely YT devs changed something inside the DOM tree.`;
               }
             }
@@ -83,7 +89,7 @@ const playAllUploadedVideos_app = async function () {
             if(i.innerHTML.match(/page-subtype="channels"/)){//
               nodeList = i.querySelector('ytd-two-column-browse-results-renderer')
                 .querySelectorAll('ytd-grid-video-renderer.style-scope.ytd-grid-renderer');
-              if(!nodeList){
+              if(!nodeList.length){
                 throw `Lovely YT devs changed something inside the DOM tree.`;
               }
             }
@@ -94,7 +100,7 @@ const playAllUploadedVideos_app = async function () {
             if(i.innerHTML.match(/page-subtype="subscriptions"/)){
               nodeList = i.querySelector('ytd-two-column-browse-results-renderer')
                 .querySelectorAll('ytd-grid-video-renderer.style-scope.ytd-grid-renderer');
-              if(!nodeList){
+              if(!nodeList.length){
                 throw `Lovely YT devs changed something inside the DOM tree.`;
               }
             }
@@ -105,7 +111,7 @@ const playAllUploadedVideos_app = async function () {
             if(i.innerHTML.match(/page-subtype="playlist"/)){
               nodeList = i.querySelector('ytd-two-column-browse-results-renderer')
                 .querySelectorAll('ytd-playlist-video-renderer.style-scope.ytd-playlist-video-list-renderer');
-              if(!nodeList){
+              if(!nodeList.length){
                 throw `Lovely YT devs changed something inside the DOM tree.`;
               }
             }
@@ -116,7 +122,7 @@ const playAllUploadedVideos_app = async function () {
             if(i.innerHTML.match(/page-subtype="history"/)){
               nodeList = i.querySelector('ytd-two-column-browse-results-renderer')
                 .querySelectorAll('ytd-video-renderer.style-scope.ytd-item-section-renderer');
-              if(!nodeList){
+              if(!nodeList.length){
                 throw `Lovely YT devs changed something inside the DOM tree.`;
               }
             }
@@ -143,7 +149,6 @@ const playAllUploadedVideos_app = async function () {
         window.scroll(0, yValue);
         await new Promise(resolve => setTimeout(resolve, 1000));
         videoNodeList = getVideoNodeList();
-        console.log(videoNodeList)
         if (previousLength < videoNodeList.length){
             sequenceOfTheSameLength = 0;
             previousLength = videoNodeList.length;
@@ -177,14 +182,20 @@ const playAllUploadedVideos_app = async function () {
   
   const spawnYTPlayer = function () {
     appState.YTPlayer = new YT.Player(playerElementId, {
-      height: `889`,
-      width: `1908`,
+      height: `${window.innerHeight - playerElement.children[0].clientHeight}`,
+      width: `${playerElement.clientWidth}`,
       videoId: appState.linkQueue[appState.playingVideoIndex],
       events: {
           'onStateChange': onPlayerStateChange,
           'onReady': onPlayerReady
         }
     });
+  }
+  
+  const drawInterfaceValues = function () {
+    queueIndexInput.value = appState.playingVideoIndex + 1;
+    queueIndexInput.max = appState.linkQueue.length;
+    paginationCounter.children[2].innerHTML = appState.linkQueue.length;
   }
   
   const onPlayerStateChange = async function (e) {
@@ -197,7 +208,7 @@ const playAllUploadedVideos_app = async function () {
           if(!!appState.isQueueReversed) {
             break;
           }else{
-            await addVideosToQueue();
+            await load100Videos();
           }
         }
         selectNextVideo();
@@ -231,6 +242,10 @@ const playAllUploadedVideos_app = async function () {
       e.preventDefault();
     }
     
+    if(!appState.isReady){
+      return;
+    }
+    
     appState.playingVideoIndex--;
     if(appState.playingVideoIndex < 0) {
       appState.playingVideoIndex++;
@@ -238,7 +253,7 @@ const playAllUploadedVideos_app = async function () {
     }
     
     appState.YTPlayer.loadVideoById(appState.linkQueue[appState.playingVideoIndex]);
-    paginationCounter.children[0].innerHTML = appState.playingVideoIndex + 1;
+    drawInterfaceValues();
   }
   
   const pauseOrPlayVideo = function (e) {
@@ -251,13 +266,16 @@ const playAllUploadedVideos_app = async function () {
     }
     if(!!appState.isPaused){
       appState.YTPlayer.playVideo();
-      return;
     }
   }
   
   const selectNextVideo = function (e) {
     if(e) {
       e.preventDefault();
+    }
+    
+    if(!appState.isReady){
+      return;
     }
     
     appState.playingVideoIndex++;
@@ -267,68 +285,89 @@ const playAllUploadedVideos_app = async function () {
     }
     
     appState.YTPlayer.loadVideoById(appState.linkQueue[appState.playingVideoIndex]);
-    paginationCounter.children[0].innerHTML = appState.playingVideoIndex + 1;
+    drawInterfaceValues();
   }
   
-  const showQueueIndexInput = function (e){
+  const selectVideo = function (e) {
     if (e) {
       e.preventDefault();
     }
     
-  }
-  
-  const hideQueueIndexInput = function (){
-    // paginationCounter.children[0]
-    // paginationCounter.children[0].children[1].children[0]
-  }
-  
-  const setQueueIndex = function (e){
-    if (e) {
-      e.preventDefault();
+    let value = Number(queueIndexInput.value);
+    
+    if(value > appState.linkQueue.length || value < 1){
+      return;
     }
     
-  }
+    appState.playingVideoIndex = value - 1;
+    
+    appState.YTPlayer.loadVideoById(appState.linkQueue[appState.playingVideoIndex]);
+    drawInterfaceValues();
+  }  
   
-  const addVideosToQueue = async function (e) {
+  const load100Videos = async function (e) {
     if (e) {
       e.preventDefault();
     }
     
     if (appState.currentURL !== document.URL) {
       alert(`
-        appState.currentURL !== document.URL
         click PlayAll button or go to ${appState.currentURL}
       `);
       return;
     }
     
+    if(!appState.isReady){
+      return;
+    }
+    appState.isReady = false;
+    
     const linkQueueLength = appState.linkQueue.length;
     if(!!appState.isQueueReversed) {
-
+      let queue = await loadVideoURLQueue(100);
+      queue.reverse();
+      appState.linkQueue = queue.concat(appState.linkQueue);
+      appState.playingVideoIndex = appState.playingVideoIndex + queue.length;
+      if(appState.linkQueue.length === linkQueueLength) {
+        appState.playingVideoIndex = appState.playingVideoIndex - queue.length;
+        alert(`
+          WARNING: You have already loaded all uploaded videos, or there are some problems :3
+        `);
+      }
     }else{
-      appState.linkQueue = appState.linkQueue.concat(await loadVideoURLQueue());
+      appState.linkQueue = appState.linkQueue.concat(await loadVideoURLQueue(100));
       if(appState.linkQueue.length === linkQueueLength) {
         alert(`
-          WARNING: appState.linkQueue = appState.linkQueue.concat(await loadVideoURLQueue()); appState.linkQueue.length === linkQueueLength
-          You have already loaded all uploaded videos, or there are some problems :3
+          WARNING: You have already loaded all uploaded videos, or there are some problems :3
         `);
-        return;
       }
     }
-    paginationCounter.children[2].innerHTML = appState.linkQueue.length;
+    drawInterfaceValues();
+    appState.isReady = true;
   }
   
-  const reverseQueue = function (e) {
+  const reverseVideoQueue = function (e) {
     if (e) {
       e.preventDefault();
     }
     
-    if(!!appState.isQueueReversed){
-      
-    }else{
-      
+    if(!appState.isReady){
+      return;
     }
-    console.log('do nothing')
+    appState.isReady = false;
+    
+    if(!!appState.isQueueReversed){
+      appState.linkQueue.reverse();
+      appState.playingVideoIndex = appState.linkQueue.length - 1 - appState.playingVideoIndex;
+      appState.isQueueReversed = false;
+    }else{
+      appState.linkQueue.reverse();
+      appState.playingVideoIndex = appState.linkQueue.length - 1 - appState.playingVideoIndex;
+      appState.isQueueReversed = true;
+    }
+    appState.YTPlayer.loadVideoById(appState.linkQueue[appState.playingVideoIndex]);
+    drawInterfaceValues();
+    appState.isReady = true;
   }
   
   const showPlayer = function (e) {
@@ -346,7 +385,15 @@ const playAllUploadedVideos_app = async function () {
   }
   
   const initialInterfaceElement = document.createElement('div');
-  initialInterfaceElement.setAttribute('style', 'z-index: 2100; display: flex; position: fixed; width: 100%; font-size: 30px; cursor: pointer; justify-content: right;');
+  initialInterfaceElement.setAttribute('style', `
+    z-index: 2100;
+    display: flex;
+    position: fixed;
+    width: 100%;
+    font-size: 30px;
+    cursor: pointer;
+    justify-content: right;
+  `);
   const initialInterfaceElement_shadow = initialInterfaceElement.attachShadow({mode: 'open'});
   initialInterfaceElement_shadow.innerHTML = `
     <style>
@@ -377,7 +424,7 @@ const playAllUploadedVideos_app = async function () {
   
   const playerElementId = `DGhdrthdfgberTNdfBBryhdfjkdtYgHDrt6h4e5tE56ue5srhue5YTDHRthtydj43t325yerhJfGUYkYU7hgdYhtyTK66Dyjn`;
   const playerElement = document.createElement('div');
-  playerElement.setAttribute('style', 'z-index: 2200;display: none; position: fixed; flex-direction: column; background-color: black;');
+  playerElement.setAttribute('style', 'z-index: 2200;display: none; position: fixed; flex-direction: column; background-color: black;width: 100%;');
   playerElement.innerHTML = `
     <div></div>
     <div id="${playerElementId}"></div>
@@ -403,6 +450,14 @@ const playAllUploadedVideos_app = async function () {
     .butt:active {
       opacity: .5
     }
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+    }
+
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
     </style>
     <div style="" class="butt">
       ⏮️
@@ -414,12 +469,19 @@ const playAllUploadedVideos_app = async function () {
       ⏭️
     </div>
     <div style="display: flex;flex-direction: row;">
-      <div style="user-select: none;padding:9px;display: flex; cursor: pointer;">
-        <div style="display: none;">1</div>
-        <div style="position: absolute;display: flex;justify-content: right;">
-          <input type="number" min="1" max="100" value="30" style="position: absolute;width: 60px;height: 30px;font-size: 30px;">
-        </div>
-      </div>
+      <form style="display: flex;flex-direction: row;">
+        <input type="number" value="1" min="1" style="
+            width:54px;
+            font-size: 30px;
+            text-align: end;
+            border: none;
+            border-bottom: 1px solid white;
+            background: none;
+            margin: auto 9px;
+            font-family: inherit;
+            height: 44px;
+          ">
+      </form>
       <div style="user-select: none;padding:9px 0px 9px 0px;">
         /
       </div>
@@ -427,8 +489,8 @@ const playAllUploadedVideos_app = async function () {
         0
       </div>
     </div>
-    <div style="" class="butt">
-      add
+    <div class="butt">
+      add100
     </div>
     <div style="" class="butt">
       🔄
@@ -441,13 +503,22 @@ const playAllUploadedVideos_app = async function () {
   playerElementChild0_shadow.children[2].addEventListener('click', pauseOrPlayVideo);
   playerElementChild0_shadow.children[3].addEventListener('click', selectNextVideo);
   const paginationCounter = playerElementChild0_shadow.children[4];
-  paginationCounter.children[0].addEventListener('click', showQueueIndexInput);
-  paginationCounter.children[0].children[1].children[0].addEventListener('keydown', setQueueIndex);
-  playerElementChild0_shadow.children[5].addEventListener('click', addVideosToQueue);
-  playerElementChild0_shadow.children[6].addEventListener('click', reverseQueue);
+  paginationCounter.children[0].addEventListener('submit', selectVideo);
+  const queueIndexInput = paginationCounter.children[0].children[0];
+  playerElementChild0_shadow.children[5].addEventListener('click', load100Videos);
+  playerElementChild0_shadow.children[6].addEventListener('click', reverseVideoQueue);
   playerElementChild0_shadow.children[7].addEventListener('click', hidePlayer);
   document.body.appendChild(playerElement);
-
+  
+  window.onresize = function () {
+    const element = document.querySelector(`#${playerElementId}`);
+    if(element.tagName != "IFRAME"){
+      return;
+    }
+    playerElement.children[1].width = playerElement.clientWidth;
+    playerElement.children[1].height = window.innerHeight - playerElement.children[0].clientHeight;
+  }
+  
   while (true) {
     let match;
     if(!!(match = document.URL.match(/https:\/\/www\.youtube.*(\/videos$)/))) {
@@ -480,11 +551,13 @@ fetch(`https://www.youtube.com/iframe_api`)
     const exec = `
       try{
         playAllUploadedVideos_app();
-        console.log('script \"play all uploaded videos\" is ready');
+        console.log('playAllUploadsButton is ready');
       } catch (e) {
-        console.error(e);
-        alert('ERROR: ' + e);
+        console.error('ERROR: ', e);
+        alert('ERROR: ', e);
       }
     `;
     eval(onYTIAPIReadyFunc + apiCode + exec);
   });
+
+
